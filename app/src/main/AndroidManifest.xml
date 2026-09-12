@@ -41,8 +41,7 @@
             android:exported="true"
             android:excludeFromRecents="true"
             android:label="@string/share_target_custom"
-            android:theme="@style/Theme.LinkSanitiser"
-            android:windowSoftInputMode="adjustResize">
+            android:theme="@style/Theme.LinkSanitiser">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

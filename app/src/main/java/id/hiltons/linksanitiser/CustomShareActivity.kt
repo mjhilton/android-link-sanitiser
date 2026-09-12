@@ -1,16 +1,11 @@
 package id.hiltons.linksanitiser
 
-import android.graphics.Rect
 import android.os.Bundle
-import android.view.MotionEvent
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.CheckBox
 import android.widget.CompoundButton
-import android.widget.EditText
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.doAfterTextChanged
 import id.hiltons.linksanitiser.databinding.ActivityCustomShareBinding
 
 /**
@@ -42,15 +37,21 @@ class CustomShareActivity : AppCompatActivity() {
         binding = ActivityCustomShareBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.sharedTextPreview.text = sharedText
+
         binding.switchStripUtm.isChecked = prefs.stripUtm
         binding.switchStripClickIds.isChecked = prefs.stripClickIds
         binding.switchStripReferral.isChecked = prefs.stripReferral
+        binding.switchStripDomainSpecific.isChecked = prefs.stripDomainSpecific
         binding.switchCleanSurroundingText.isChecked = prefs.cleanSurroundingText
-        binding.customParamsInput.setText(prefs.customParamsRaw)
 
         // Finding links doesn't depend on which tracker categories are enabled, so this
         // stays valid however the switches below get toggled afterwards.
         found = LinkSanitiser.findLinks(sharedText, prefs.toConfig())
+
+        if (found.any { LinkSanitiser.hasDomainSpecificRule(it.original) }) {
+            binding.domainSpecificSection.visibility = View.VISIBLE
+        }
 
         if (found.size > 1) {
             binding.linksSection.visibility = View.VISIBLE
@@ -72,9 +73,9 @@ class CustomShareActivity : AppCompatActivity() {
         binding.switchStripUtm.setOnCheckedChangeListener(onChanged)
         binding.switchStripClickIds.setOnCheckedChangeListener(onChanged)
         binding.switchStripReferral.setOnCheckedChangeListener(onChanged)
+        binding.switchStripDomainSpecific.setOnCheckedChangeListener(onChanged)
         binding.switchCleanSurroundingText.setOnCheckedChangeListener(onChanged)
         linkCheckboxes.forEach { it.setOnCheckedChangeListener(onChanged) }
-        binding.customParamsInput.doAfterTextChanged { updatePreview() }
 
         updatePreview()
 
@@ -88,14 +89,12 @@ class CustomShareActivity : AppCompatActivity() {
         }
     }
 
-    private fun customParamsRaw(): String = binding.customParamsInput.text?.toString().orEmpty()
-
     private fun currentConfig(): SanitiserConfig = prefs.toConfig().copy(
         stripUtm = binding.switchStripUtm.isChecked,
         stripClickIds = binding.switchStripClickIds.isChecked,
         stripReferral = binding.switchStripReferral.isChecked,
+        stripDomainSpecific = binding.switchStripDomainSpecific.isChecked,
         cleanSurroundingText = binding.switchCleanSurroundingText.isChecked,
-        customParams = customParamsRaw().split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet(),
     )
 
     private fun keepIndices(): Set<Int> = when {
@@ -123,24 +122,7 @@ class CustomShareActivity : AppCompatActivity() {
         prefs.stripUtm = binding.switchStripUtm.isChecked
         prefs.stripClickIds = binding.switchStripClickIds.isChecked
         prefs.stripReferral = binding.switchStripReferral.isChecked
+        prefs.stripDomainSpecific = binding.switchStripDomainSpecific.isChecked
         prefs.cleanSurroundingText = binding.switchCleanSurroundingText.isChecked
-        prefs.customParamsRaw = customParamsRaw()
-    }
-
-    /** Tapping anywhere outside the focused text field clears its focus and dismisses the keyboard. */
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_DOWN) {
-            val focused = currentFocus
-            if (focused is EditText) {
-                val bounds = Rect()
-                focused.getGlobalVisibleRect(bounds)
-                if (!bounds.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
-                    focused.clearFocus()
-                    val imm = getSystemService(InputMethodManager::class.java)
-                    imm?.hideSoftInputFromWindow(focused.windowToken, 0)
-                }
-            }
-        }
-        return super.dispatchTouchEvent(ev)
     }
 }

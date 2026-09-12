@@ -32,13 +32,14 @@
             android:textSize="18sp" />
 
         <TextView
+            android:id="@+id/counterSublabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="20dp"
             android:alpha="0.7"
-            android:text="@string/counter_sublabel"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:text="" />
 
         <View
             android:layout_width="match_parent"

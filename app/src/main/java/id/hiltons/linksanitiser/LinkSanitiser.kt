@@ -9,7 +9,7 @@ data class SanitiserConfig(
     val stripUtm: Boolean = true,
     val stripClickIds: Boolean = true,
     val stripReferral: Boolean = false,
-    val customParams: Set<String> = emptySet(),
+    val stripDomainSpecific: Boolean = true,
     val cleanSurroundingText: Boolean = false,
 )
 
@@ -165,14 +165,12 @@ object LinkSanitiser {
 
         if (query.isEmpty()) return url to 0
 
-        val customLower = config.customParams.map { it.lowercase() }.toSet()
         val domainParams = domainSpecificParams(base)
         var removed = 0
         val keptPairs = query.split('&').filter { pair ->
             if (pair.isEmpty()) return@filter false
             val name = pair.substringBefore('=').lowercase()
-            val shouldStrip = name in customLower ||
-                name in domainParams ||
+            val shouldStrip = (config.stripDomainSpecific && name in domainParams) ||
                 (config.stripUtm && (name in UTM_PARAMS || CAMPAIGN_TAG_PREFIXES.any { name.startsWith(it) })) ||
                 (config.stripClickIds && name in CLICK_ID_PARAMS) ||
                 (config.stripReferral && name in REFERRAL_PARAMS)
@@ -204,4 +202,7 @@ object LinkSanitiser {
         val host = afterScheme.substringBefore('/').substringAfterLast('@').substringBefore(':').lowercase()
         return host.removePrefix("www.").takeIf { it.isNotEmpty() }
     }
+
+    /** True if [url]'s host has a curated, site-specific tracking rule (see [DOMAIN_SPECIFIC_PARAMS]). */
+    fun hasDomainSpecificRule(url: String): Boolean = domainSpecificParams(url).isNotEmpty()
 }

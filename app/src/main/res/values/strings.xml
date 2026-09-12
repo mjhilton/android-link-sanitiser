@@ -4,7 +4,9 @@
     <string name="share_target_custom">Custom</string>
 
     <string name="counter_label">Links cleaned</string>
-    <string name="counter_sublabel">Tracking parameters removed since install</string>
+    <string name="counter_sublabel">%1$d tracking %2$s removed since install</string>
+    <string name="param_singular">parameter</string>
+    <string name="param_plural">parameters</string>
 
     <string name="top_domains_heading">Most-cleaned domains</string>
     <string name="top_domains_subheading">Sites with the most tracking stripped from their links</string>
@@ -19,11 +21,10 @@
     <string name="setting_strip_click_ids_desc">fbclid, gclid, igshid and other platform click identifiers</string>
     <string name="setting_strip_referral">Strip referral parameters</string>
     <string name="setting_strip_referral_desc">ref, source and similar (occasionally affects the destination page)</string>
+    <string name="setting_strip_domain_specific">Strip domain-specific parameters</string>
+    <string name="setting_strip_domain_specific_desc">Extra tracking codes known for specific sites in this share (e.g. The Guardian\'s CMP tag)</string>
     <string name="setting_clean_surrounding_text">Clean surrounding text</string>
     <string name="setting_clean_surrounding_text_desc">Strip supporting text and share just the link(s), instead of cleaning in place</string>
-
-    <string name="custom_params_label">Custom parameters to always strip (comma-separated)</string>
-    <string name="custom_params_hint">e.g. cid, affiliate_id</string>
 
     <string name="reset_stats">Reset stats</string>
 
@@ -31,9 +32,9 @@
     <string name="toast_nothing_to_clean">No tracking parameters found</string>
 
     <string name="custom_title">Customise for this share</string>
+    <string name="custom_shared_text_heading">Shared text</string>
     <string name="custom_links_heading">Links found</string>
     <string name="custom_links_subheading">Pick which to keep — the rest will be dropped</string>
-    <string name="custom_tracking_heading">Also strip</string>
     <string name="custom_preview_heading">Preview</string>
     <string name="custom_preview_empty">(nothing selected — pick a link, or turn off cleaning surrounding text)</string>
     <string name="custom_share">Share</string>

@@ -23,12 +23,12 @@ fun Activity.extractSharedText(): String? =
  * don't loop back into themselves. Finishes the calling activity.
  */
 fun Activity.reshareCleaned(text: String, keptLinks: List<FoundLink>, prefs: Prefs) {
-    val paramsRemoved = keptLinks.sumOf { it.paramsRemoved }
+    val cleanedLinks = keptLinks.filter { it.paramsRemoved > 0 }
+    val paramsRemoved = cleanedLinks.sumOf { it.paramsRemoved }
 
-    if (paramsRemoved > 0) {
-        prefs.incrementCount(paramsRemoved)
-        keptLinks.filter { it.paramsRemoved > 0 }
-            .forEach { link -> LinkSanitiser.hostOf(link.original)?.let(prefs::recordDomainCleaned) }
+    if (cleanedLinks.isNotEmpty()) {
+        prefs.recordCleaning(cleanedLinks.size, paramsRemoved)
+        cleanedLinks.forEach { link -> LinkSanitiser.hostOf(link.original)?.let(prefs::recordDomainCleaned) }
         val paramWord = if (paramsRemoved == 1) "parameter" else "parameters"
         Toast.makeText(this, getString(R.string.toast_cleaned, paramsRemoved, paramWord), Toast.LENGTH_SHORT).show()
     } else {

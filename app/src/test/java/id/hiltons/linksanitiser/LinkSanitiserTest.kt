@@ -41,11 +41,18 @@ class LinkSanitiserTest {
     }
 
     @Test
-    fun `strips custom parameters`() {
-        val input = "https://example.com/?cid=999&id=1"
-        val config = defaultConfig.copy(customParams = setOf("cid"))
+    fun `strip domain specific can be turned off`() {
+        val input = "https://www.theguardian.com/world/2024/article?CMP=share_btn_url"
+        val config = defaultConfig.copy(stripDomainSpecific = false)
         val result = LinkSanitiser.sanitise(input, config)
-        assertEquals("https://example.com/?id=1", result.text)
+        assertEquals(input, result.text)
+        assertEquals(0, result.paramsRemoved)
+    }
+
+    @Test
+    fun `hasDomainSpecificRule is true only for domains with a curated rule`() {
+        assertEquals(true, LinkSanitiser.hasDomainSpecificRule("https://www.theguardian.com/a"))
+        assertEquals(false, LinkSanitiser.hasDomainSpecificRule("https://example.com/a"))
     }
 
     @Test

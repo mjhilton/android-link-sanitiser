@@ -7,8 +7,12 @@ class Prefs(context: Context) {
     private val sp = context.getSharedPreferences("link_sanitiser_prefs", Context.MODE_PRIVATE)
 
     var linksCleanedCount: Int
-        get() = sp.getInt(KEY_COUNT, 0)
-        set(value) = sp.edit().putInt(KEY_COUNT, value).apply()
+        get() = sp.getInt(KEY_LINKS_COUNT, 0)
+        set(value) = sp.edit().putInt(KEY_LINKS_COUNT, value).apply()
+
+    var paramsStrippedCount: Int
+        get() = sp.getInt(KEY_PARAMS_COUNT, 0)
+        set(value) = sp.edit().putInt(KEY_PARAMS_COUNT, value).apply()
 
     var stripUtm: Boolean
         get() = sp.getBoolean(KEY_STRIP_UTM, true)
@@ -22,16 +26,9 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_STRIP_REFERRAL, false)
         set(value) = sp.edit().putBoolean(KEY_STRIP_REFERRAL, value).apply()
 
-    /** Raw comma-separated text as typed by the user, preserved verbatim for editing. */
-    var customParamsRaw: String
-        get() = sp.getString(KEY_CUSTOM_PARAMS, "") ?: ""
-        set(value) = sp.edit().putString(KEY_CUSTOM_PARAMS, value).apply()
-
-    val customParams: Set<String>
-        get() = customParamsRaw.split(',')
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .toSet()
+    var stripDomainSpecific: Boolean
+        get() = sp.getBoolean(KEY_STRIP_DOMAIN_SPECIFIC, true)
+        set(value) = sp.edit().putBoolean(KEY_STRIP_DOMAIN_SPECIFIC, value).apply()
 
     /** Remembered from the last time the Custom share target was used. */
     var cleanSurroundingText: Boolean
@@ -42,12 +39,14 @@ class Prefs(context: Context) {
         stripUtm = stripUtm,
         stripClickIds = stripClickIds,
         stripReferral = stripReferral,
-        customParams = customParams,
+        stripDomainSpecific = stripDomainSpecific,
         cleanSurroundingText = cleanSurroundingText,
     )
 
-    fun incrementCount(by: Int) {
-        linksCleanedCount += by
+    /** Records that [linksCount] links were cleaned, stripping [paramsCount] tracking parameters in total. */
+    fun recordCleaning(linksCount: Int, paramsCount: Int) {
+        linksCleanedCount += linksCount
+        paramsStrippedCount += paramsCount
     }
 
     /** How many times a link from [domain] has been cleaned and actually shared. */
@@ -61,9 +60,10 @@ class Prefs(context: Context) {
     fun topDomains(limit: Int): List<Pair<String, Int>> =
         domainCounts.entries.sortedByDescending { it.value }.take(limit).map { it.key to it.value }
 
-    /** Clears the overall counter and the per-domain breakdown (not the settings). */
+    /** Clears the counters and the per-domain breakdown (not the settings). */
     fun resetStats() {
         linksCleanedCount = 0
+        paramsStrippedCount = 0
         sp.edit().remove(KEY_DOMAIN_COUNTS).apply()
     }
 
@@ -81,11 +81,12 @@ class Prefs(context: Context) {
     }
 
     private companion object {
-        const val KEY_COUNT = "links_cleaned_count"
+        const val KEY_LINKS_COUNT = "links_cleaned_count"
+        const val KEY_PARAMS_COUNT = "params_stripped_count"
         const val KEY_STRIP_UTM = "strip_utm"
         const val KEY_STRIP_CLICK_IDS = "strip_click_ids"
         const val KEY_STRIP_REFERRAL = "strip_referral"
-        const val KEY_CUSTOM_PARAMS = "custom_params"
+        const val KEY_STRIP_DOMAIN_SPECIFIC = "strip_domain_specific"
         const val KEY_CLEAN_SURROUNDING_TEXT = "clean_surrounding_text"
         const val KEY_DOMAIN_COUNTS = "domain_counts"
     }

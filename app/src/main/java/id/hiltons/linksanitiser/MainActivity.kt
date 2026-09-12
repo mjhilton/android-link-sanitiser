@@ -41,6 +41,10 @@ class MainActivity : AppCompatActivity() {
     private fun updateDisplay() {
         binding.counterValue.text = prefs.linksCleanedCount.toString()
 
+        val paramsCount = prefs.paramsStrippedCount
+        val paramWord = if (paramsCount == 1) getString(R.string.param_singular) else getString(R.string.param_plural)
+        binding.counterSublabel.text = getString(R.string.counter_sublabel, paramsCount, paramWord)
+
         val topDomains = prefs.topDomains(limit = 5)
         if (topDomains.isEmpty()) {
             binding.topDomainsText.text = getString(R.string.top_domains_empty)
