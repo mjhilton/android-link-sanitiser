@@ -63,10 +63,13 @@ just leave it available) as an option in Android's share sheet.
 
 ## Status
 
-Not yet built/run in this environment — the sandbox this was scaffolded in
-has no Android SDK and no network access to Google's Maven/SDK servers,
-so the Gradle/AGP setup and manifest are hand-verified rather than
-`gradlew`-verified. The core `LinkSanitiser` stripping logic was
-independently checked by hand against every case in
-`LinkSanitiserTest.kt`. Worth doing a real `./gradlew assembleDebug` and a
-manual share-sheet test before relying on it.
+Builds cleanly and all 15 `LinkSanitiserTest` unit tests pass
+(`./gradlew test assembleDebug`), verified with the Android SDK
+(compileSdk/build-tools 35). The manifest, package name, launcher
+activity, and the `ShareReceiverActivity` `ACTION_SEND` intent filter
+were all confirmed present in the built APK via `aapt dump`.
+
+Not yet verified: an actual on-device/emulator run through the Android
+share sheet — install the APK and try sharing a link from a browser or
+another app to confirm the end-to-end flow (chooser reopens, link is
+cleaned, counter increments) before relying on it day to day.
