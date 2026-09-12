@@ -37,21 +37,11 @@ class Prefs(context: Context) {
             .filter { it.isNotEmpty() }
             .toSet()
 
-    var cleanSurroundingText: Boolean
-        get() = sp.getBoolean(KEY_CLEAN_SURROUNDING_TEXT, false)
-        set(value) = sp.edit().putBoolean(KEY_CLEAN_SURROUNDING_TEXT, value).apply()
-
-    var linksToKeep: LinksToKeep
-        get() = runCatching { LinksToKeep.valueOf(sp.getString(KEY_LINKS_TO_KEEP, null) ?: "") }.getOrDefault(LinksToKeep.ALL)
-        set(value) = sp.edit().putString(KEY_LINKS_TO_KEEP, value.name).apply()
-
     fun toConfig(): SanitiserConfig = SanitiserConfig(
         stripUtm = stripUtm,
         stripClickIds = stripClickIds,
         stripReferral = stripReferral,
         customParams = customParams,
-        cleanSurroundingText = cleanSurroundingText,
-        linksToKeep = linksToKeep,
     )
 
     fun incrementCount(by: Int) {
@@ -65,7 +55,5 @@ class Prefs(context: Context) {
         const val KEY_STRIP_REFERRAL = "strip_referral"
         const val KEY_SHOW_TOAST = "show_toast"
         const val KEY_CUSTOM_PARAMS = "custom_params"
-        const val KEY_CLEAN_SURROUNDING_TEXT = "clean_surrounding_text"
-        const val KEY_LINKS_TO_KEEP = "links_to_keep"
     }
 }

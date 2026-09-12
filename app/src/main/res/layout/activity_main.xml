@@ -132,59 +132,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginVertical="20dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchCleanSurroundingText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/setting_clean_surrounding_text" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:alpha="0.7"
-            android:text="@string/setting_clean_surrounding_text_desc"
-            android:textSize="12sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="4dp"
-            android:text="@string/setting_links_to_keep"
-            android:textStyle="bold" />
-
-        <RadioGroup
-            android:id="@+id/linksToKeepGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <RadioButton
-                android:id="@+id/linksToKeepAll"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/links_to_keep_all" />
-
-            <RadioButton
-                android:id="@+id/linksToKeepFirst"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/links_to_keep_first" />
-
-            <RadioButton
-                android:id="@+id/linksToKeepChoose"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/links_to_keep_choose" />
-
-        </RadioGroup>
-
     </LinearLayout>
 
 </ScrollView>

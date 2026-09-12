@@ -26,27 +26,11 @@ class MainActivity : AppCompatActivity() {
         binding.switchStripReferral.isChecked = prefs.stripReferral
         binding.switchShowToast.isChecked = prefs.showToast
         binding.customParamsInput.setText(prefs.customParamsRaw)
-        binding.switchCleanSurroundingText.isChecked = prefs.cleanSurroundingText
-        binding.linksToKeepGroup.check(
-            when (prefs.linksToKeep) {
-                LinksToKeep.ALL -> binding.linksToKeepAll.id
-                LinksToKeep.FIRST -> binding.linksToKeepFirst.id
-                LinksToKeep.CHOOSE -> binding.linksToKeepChoose.id
-            },
-        )
 
         binding.switchStripUtm.setOnCheckedChangeListener { _, checked -> prefs.stripUtm = checked }
         binding.switchStripClickIds.setOnCheckedChangeListener { _, checked -> prefs.stripClickIds = checked }
         binding.switchStripReferral.setOnCheckedChangeListener { _, checked -> prefs.stripReferral = checked }
         binding.switchShowToast.setOnCheckedChangeListener { _, checked -> prefs.showToast = checked }
-        binding.switchCleanSurroundingText.setOnCheckedChangeListener { _, checked -> prefs.cleanSurroundingText = checked }
-        binding.linksToKeepGroup.setOnCheckedChangeListener { _, checkedId ->
-            prefs.linksToKeep = when (checkedId) {
-                binding.linksToKeepFirst.id -> LinksToKeep.FIRST
-                binding.linksToKeepChoose.id -> LinksToKeep.CHOOSE
-                else -> LinksToKeep.ALL
-            }
-        }
 
         binding.customParamsInput.doAfterTextChanged { text ->
             prefs.customParamsRaw = text?.toString().orEmpty()

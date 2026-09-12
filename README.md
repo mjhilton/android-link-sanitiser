@@ -7,25 +7,24 @@ re-opens the share sheet with the cleaned link so you can pick the real
 destination.
 
 The app itself has almost no UI: a launcher screen shows a running count of
-links cleaned and a handful of settings. (Package/class names still say
-"linksanitiser" — that's deliberate, so existing installs upgrade in place
-rather than becoming a separate app when the display name changed.)
+links cleaned and a handful of tracking-parameter settings. (Package/class
+names still say "linksanitiser" — that's deliberate, so existing installs
+upgrade in place rather than becoming a separate app when the display name
+changed.)
 
 ## Share targets
 
 The app shows up twice in Android's share sheet:
 
-- **Quick** — `ShareReceiverActivity`. Applies your saved default settings
-  immediately, no extra taps. If those defaults happen to be "Choose" links
-  to keep and there's more than one link, it still needs the small picker
-  below — there's no way to choose without *some* UI — but otherwise it's a
-  single invisible hop back into a fresh share sheet.
-- **Advanced** — `AdvancedShareActivity`. Shows a small floating form,
-  pre-filled from your saved defaults, letting you override any setting for
-  that one share only. Nothing you change here is saved.
-
-Both funnel into the same cleaning logic and, if needed, the same link
-picker (`LinkPickerActivity`, internal-only — not itself a share target).
+- **Quick** — `ShareReceiverActivity`. Not configurable at all: applies the
+  default tracking-parameter rules, strips surrounding text, and keeps only
+  the first link if there's more than one. No UI, ever - that's the point.
+- **Custom** — `CustomShareActivity`. Starts from the same defaults as Quick
+  (strip surrounding text, first link only) but shows a small form letting
+  you override any of that just for this share, with a live preview of the
+  result. If the share has more than one link, it also shows a checkbox per
+  link (first one pre-checked) to pick which survive - no separate picker
+  screen, it's inline. Nothing changed here is saved.
 
 ## How it works
 
@@ -33,17 +32,19 @@ picker (`LinkPickerActivity`, internal-only — not itself a share target).
   cleaning logic. It's plain Kotlin with no Android dependencies, so it's
   covered by JVM unit tests in `app/src/test/`. `findLinks()` locates and
   cleans each URL in a shared text without yet deciding which survive;
-  `buildResult()` then applies "Links to keep" and "Clean surrounding text"
-  to produce the final shared text. `sanitise()` is a convenience wrapper
-  over both for the common "clean everything in place" case.
-- `Resharing.kt` holds the logic shared by all three activities: reading the
-  incoming share, deciding whether the link picker is needed, and re-opening
-  the share sheet with the final text (excluding our own share targets so
-  you don't loop back into them).
-- `MainActivity` shows the cleaned-link counter and settings, backed by
-  `Prefs` (`SharedPreferences`).
+  `buildResult()` then keeps only the given link indices - as plain text
+  cleaned in place, or (with `cleanSurroundingText`) as just those links,
+  newline separated. `sanitise()` is a convenience wrapper over both for the
+  simple "clean everything in place" case.
+- `Resharing.kt` holds the logic shared by both activities: reading the
+  incoming share and re-opening the share sheet with the final text
+  (excluding our own share targets so you don't loop back into them).
+- `MainActivity` shows the cleaned-link counter and tracking-parameter
+  settings, backed by `Prefs` (`SharedPreferences`). Which links to keep and
+  whether to clean surrounding text are decided per-share in Custom, not
+  configured here.
 
-## Settings
+## Settings (on the main screen - apply to both share targets)
 
 - Strip UTM parameters (`utm_source`, `utm_campaign`, etc.) — on by default.
 - Strip ad/click IDs (`fbclid`, `gclid`, `igshid`, etc.) — on by default.
@@ -51,11 +52,6 @@ picker (`LinkPickerActivity`, internal-only — not itself a share target).
   these occasionally affect the destination page rather than just tracking.
 - Custom comma-separated parameter names to always strip.
 - Toggle for a confirmation toast on each share.
-- **Clean surrounding text** — off by default. When on, supporting prose is
-  discarded and only the cleaned link(s) are shared.
-- **Links to keep** — All (default), First, or Choose. First keeps only the
-  earliest link in the share and drops the rest; Choose shows a small picker
-  (links start unselected) and shares just the ones you pick, one per line.
 
 ## Building
 
@@ -97,7 +93,7 @@ Builds cleanly and all 29 `LinkSanitiserTest` unit tests pass
 activity, and both share targets' `ACTION_SEND` intent filters were
 confirmed present in the built APK via `aapt dump`.
 
-Not yet verified on a real device: the Advanced override form and the
-Choose link picker — both are new UI this session and haven't been
-through an actual touchscreen/share-sheet test yet, only unit tests of
-the underlying logic and a static check of the built APK's manifest.
+Not yet verified on a real device: the Custom form's live preview and
+inline link picker are new this round and haven't been through an
+actual touchscreen/share-sheet test yet, only unit tests of the
+underlying logic and a static check of the built APK's manifest.

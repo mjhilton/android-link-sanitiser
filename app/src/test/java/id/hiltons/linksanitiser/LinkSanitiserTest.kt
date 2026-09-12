@@ -186,28 +186,21 @@ class LinkSanitiserTest {
     }
 
     @Test
-    fun `links to keep first drops later links but leaves surrounding text`() {
+    fun `keeping only the first link's index drops the rest but leaves surrounding text`() {
         val input = "See https://a.com/?utm_source=x and https://b.com/?fbclid=y here"
-        val config = defaultConfig.copy(linksToKeep = LinksToKeep.FIRST)
-        val result = LinkSanitiser.sanitise(input, config)
+        val found = LinkSanitiser.findLinks(input, defaultConfig)
+        val result = LinkSanitiser.buildResult(input, defaultConfig, found, keepIndices = setOf(0))
         assertEquals("See https://a.com/ and  here", result.text)
         assertEquals(1, result.paramsRemoved)
     }
 
     @Test
-    fun `links to keep first with clean surrounding text yields just the first link`() {
+    fun `keeping only the first link's index with clean surrounding text yields just that link`() {
         val input = "See https://a.com/?utm_source=x and https://b.com/?fbclid=y here"
-        val config = defaultConfig.copy(linksToKeep = LinksToKeep.FIRST, cleanSurroundingText = true)
-        val result = LinkSanitiser.sanitise(input, config)
+        val config = defaultConfig.copy(cleanSurroundingText = true)
+        val found = LinkSanitiser.findLinks(input, config)
+        val result = LinkSanitiser.buildResult(input, config, found, keepIndices = setOf(0))
         assertEquals("https://a.com/", result.text)
-    }
-
-    @Test
-    fun `links to keep first with only one link behaves like all`() {
-        val input = "https://example.com/?utm_source=x"
-        val config = defaultConfig.copy(linksToKeep = LinksToKeep.FIRST)
-        val result = LinkSanitiser.sanitise(input, config)
-        assertEquals("https://example.com/", result.text)
     }
 
     @Test
@@ -222,9 +215,9 @@ class LinkSanitiserTest {
     }
 
     @Test
-    fun `buildResult with choose mode keeps only the given indices, newline joined`() {
+    fun `buildResult keeps only the given indices, newline joined when cleaning surrounding text`() {
         val input = "See https://a.com/?utm_source=x and https://b.com/?fbclid=y and https://c.com/?gclid=1 here"
-        val config = defaultConfig.copy(linksToKeep = LinksToKeep.CHOOSE)
+        val config = defaultConfig.copy(cleanSurroundingText = true)
         val found = LinkSanitiser.findLinks(input, config)
         val result = LinkSanitiser.buildResult(input, config, found, keepIndices = setOf(0, 2))
         assertEquals("https://a.com/\nhttps://c.com/", result.text)
@@ -232,12 +225,20 @@ class LinkSanitiserTest {
     }
 
     @Test
-    fun `buildResult with choose mode and no selection produces empty text`() {
+    fun `buildResult with no selection and clean surrounding text produces empty text`() {
         val input = "https://a.com/?utm_source=x and https://b.com/?fbclid=y"
-        val config = defaultConfig.copy(linksToKeep = LinksToKeep.CHOOSE)
+        val config = defaultConfig.copy(cleanSurroundingText = true)
         val found = LinkSanitiser.findLinks(input, config)
         val result = LinkSanitiser.buildResult(input, config, found, keepIndices = emptySet())
         assertEquals("", result.text)
         assertEquals(0, result.paramsRemoved)
+    }
+
+    @Test
+    fun `sanitise keeps every found link by default`() {
+        val input = "https://a.com/?utm_source=x and https://b.com/?fbclid=y"
+        val result = LinkSanitiser.sanitise(input, defaultConfig)
+        assertEquals("https://a.com/ and https://b.com/", result.text)
+        assertEquals(2, result.paramsRemoved)
     }
 }

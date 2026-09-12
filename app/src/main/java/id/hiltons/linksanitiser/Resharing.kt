@@ -43,33 +43,11 @@ fun Activity.reshareCleaned(text: String, paramsRemoved: Int, prefs: Prefs) {
             Intent.EXTRA_EXCLUDE_COMPONENTS,
             arrayOf(
                 ComponentName(this@reshareCleaned, ShareReceiverActivity::class.java),
-                ComponentName(this@reshareCleaned, AdvancedShareActivity::class.java),
+                ComponentName(this@reshareCleaned, CustomShareActivity::class.java),
             ),
         )
     }
 
     startActivity(chooser)
     finish()
-}
-
-/**
- * Cleans [text] under [config] and either reshares it immediately, or - if
- * [SanitiserConfig.linksToKeep] is [LinksToKeep.CHOOSE] and there's more than
- * one link to choose between - hands off to [LinkPickerActivity] to let the
- * user pick first. Finishes the calling activity either way.
- */
-fun Activity.processAndReshare(text: String, config: SanitiserConfig, prefs: Prefs) {
-    val found = LinkSanitiser.findLinks(text, config)
-
-    if (config.linksToKeep == LinksToKeep.CHOOSE && found.size > 1) {
-        val intent = Intent(this, LinkPickerActivity::class.java).apply {
-            putExtra(LinkPickerActivity.EXTRA_CANDIDATES, found.map { it.cleaned }.toTypedArray())
-            putExtra(LinkPickerActivity.EXTRA_PARAMS_REMOVED, found.map { it.paramsRemoved }.toIntArray())
-        }
-        startActivity(intent)
-        finish()
-    } else {
-        val result = LinkSanitiser.buildResult(text, config, found)
-        reshareCleaned(result.text, result.paramsRemoved, prefs)
-    }
 }

@@ -5,9 +5,9 @@ import android.os.Bundle
 
 /**
  * Invisible activity registered as an `ACTION_SEND` target, labelled
- * "Quick" in the share sheet. Applies the configured default settings with
- * no further input - unless those defaults are "Choose" links to keep and
- * there's more than one link, which still needs the picker UI.
+ * "Quick" in the share sheet. Not configurable at all: always applies the
+ * default tracking-parameter rules, strips surrounding text, and keeps only
+ * the first link if there's more than one. No UI, ever - that's the point.
  */
 class ShareReceiverActivity : Activity() {
 
@@ -21,6 +21,11 @@ class ShareReceiverActivity : Activity() {
         }
 
         val prefs = Prefs(this)
-        processAndReshare(sharedText, prefs.toConfig(), prefs)
+        val config = prefs.toConfig().copy(cleanSurroundingText = true)
+        val found = LinkSanitiser.findLinks(sharedText, config)
+        val keepIndices = if (found.isNotEmpty()) setOf(0) else emptySet()
+        val result = LinkSanitiser.buildResult(sharedText, config, found, keepIndices)
+
+        reshareCleaned(result.text, result.paramsRemoved, prefs)
     }
 }

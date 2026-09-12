@@ -38,10 +38,10 @@
         </activity>
 
         <activity
-            android:name=".AdvancedShareActivity"
+            android:name=".CustomShareActivity"
             android:exported="true"
             android:excludeFromRecents="true"
-            android:label="@string/share_target_advanced"
+            android:label="@string/share_target_custom"
             android:theme="@style/Theme.LinkSanitiser">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -49,12 +49,6 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".LinkPickerActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:theme="@style/Theme.LinkSanitiser" />
 
     </application>
 

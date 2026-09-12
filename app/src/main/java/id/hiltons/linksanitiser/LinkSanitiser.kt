@@ -1,10 +1,5 @@
 package id.hiltons.linksanitiser
 
-/** Which links survive when a share contains more than one. */
-enum class LinksToKeep {
-    ALL, FIRST, CHOOSE
-}
-
 /**
  * Which categories of tracking parameters to remove, plus any user-supplied
  * extras. Kept as plain data so [LinkSanitiser] has no Android dependency
@@ -16,7 +11,6 @@ data class SanitiserConfig(
     val stripReferral: Boolean = false,
     val customParams: Set<String> = emptySet(),
     val cleanSurroundingText: Boolean = false,
-    val linksToKeep: LinksToKeep = LinksToKeep.ALL,
 )
 
 data class SanitiseResult(
@@ -94,8 +88,10 @@ object LinkSanitiser {
     private val TRAILING_PUNCTUATION = charArrayOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '\'', '"')
 
     /** Convenience entry point for the common case: clean every link in place, keep them all. */
-    fun sanitise(input: String, config: SanitiserConfig): SanitiseResult =
-        buildResult(input, config, findLinks(input, config))
+    fun sanitise(input: String, config: SanitiserConfig): SanitiseResult {
+        val found = findLinks(input, config)
+        return buildResult(input, config, found, found.indices.toSet())
+    }
 
     /** Locates every link in [text] and cleans each one, without yet deciding which survive. */
     fun findLinks(text: String, config: SanitiserConfig): List<FoundLink> =
@@ -107,33 +103,26 @@ object LinkSanitiser {
         }.toList()
 
     /**
-     * Builds the final shared text from [found] links plus [config]. For
-     * [LinksToKeep.CHOOSE], [keepIndices] (indices into [found]) must be
-     * supplied by the caller after showing the picker UI; it's ignored for
-     * [LinksToKeep.ALL] and [LinksToKeep.FIRST], which resolve on their own.
+     * Builds the final shared text: only the links at [keepIndices] (into
+     * [found]) survive. With [SanitiserConfig.cleanSurroundingText], the
+     * result is just those links, newline separated; otherwise they're
+     * cleaned in place and any dropped links are removed, leaving the rest
+     * of the text as-is.
      */
-    fun buildResult(text: String, config: SanitiserConfig, found: List<FoundLink>, keepIndices: Set<Int>? = null): SanitiseResult {
+    fun buildResult(text: String, config: SanitiserConfig, found: List<FoundLink>, keepIndices: Set<Int>): SanitiseResult {
         if (found.isEmpty()) return SanitiseResult(text, 0, 0)
 
-        val kept = when (config.linksToKeep) {
-            LinksToKeep.ALL -> found.indices.toSet()
-            LinksToKeep.FIRST -> setOf(0)
-            LinksToKeep.CHOOSE -> keepIndices ?: found.indices.toSet()
-        }
+        val paramsRemoved = keepIndices.sumOf { found[it].paramsRemoved }
+        val urlsChanged = keepIndices.count { found[it].cleaned != found[it].original }
 
-        val paramsRemoved = kept.sumOf { found[it].paramsRemoved }
-        val urlsChanged = kept.count { found[it].cleaned != found[it].original }
-
-        // Choose mode always produces a link-only, newline-joined result (per spec) since
-        // the whole point of picking is to curate a clean list, not interleave with prose.
-        val text2 = if (config.cleanSurroundingText || config.linksToKeep == LinksToKeep.CHOOSE) {
-            kept.sorted().joinToString("\n") { found[it].cleaned }
+        val text2 = if (config.cleanSurroundingText) {
+            keepIndices.sorted().joinToString("\n") { found[it].cleaned }
         } else {
             buildString {
                 var cursor = 0
                 for ((i, link) in found.withIndex()) {
                     append(text, cursor, link.range.first)
-                    if (i in kept) append(link.cleaned)
+                    if (i in keepIndices) append(link.cleaned)
                     cursor = link.range.last + 1
                 }
                 append(text, cursor, text.length)
