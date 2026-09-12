@@ -7,7 +7,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import id.hiltons.linksanitiser.databinding.ActivityMainBinding
@@ -19,22 +21,32 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Opt into edge-to-edge ourselves rather than relying on whatever the device's
+        // own OS version defaults to: Android 15+ forces this regardless, but on older
+        // versions it's still off unless requested, which would otherwise make the
+        // insets handling below behave differently (or not fire at all) depending on
+        // which OS the app happens to be running on.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         prefs = Prefs(this)
 
-        // Ensure the scroll view can push its content above the keyboard (and, on
-        // edge-to-edge devices, above the nav bar) rather than letting either cover it.
+        // Now that we're edge-to-edge on every OS version, the system no longer pads
+        // the root view for us - not for the status/nav bars, and not for the
+        // keyboard - so both have to be applied by hand from the dispatched insets.
         ViewCompat.setOnApplyWindowInsetsListener(binding.scrollRoot) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            val systemBarsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-            view.updatePadding(bottom = maxOf(imeBottom, systemBarsBottom))
+            view.updatePadding(top = bars.top, bottom = maxOf(imeBottom, bars.bottom))
             if (imeBottom > 0) {
-                // The padding above only takes effect after this pass, so the focused
-                // field's on-focus auto-scroll (which ran before the keyboard appeared)
-                // undershoots. Ask again now that there's room to scroll into.
-                view.post {
+                // updatePadding() only requests a layout; it hasn't happened yet, so
+                // asking for the focused view's rect right now would use its
+                // pre-keyboard position and undershoot. Wait for that layout to
+                // actually land before asking again.
+                view.doOnLayout {
                     view.findFocus()?.let { focused ->
                         focused.requestRectangleOnScreen(Rect(0, 0, focused.width, focused.height), true)
                     }
