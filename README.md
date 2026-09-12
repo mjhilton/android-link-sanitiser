@@ -6,11 +6,12 @@ parameters (UTM tags, `fbclid`, `gclid`, and similar) then immediately
 re-opens the share sheet with the cleaned link so you can pick the real
 destination.
 
-The app itself has almost no UI: a launcher screen shows a running count of
-links cleaned and a handful of tracking-parameter settings. (Package/class
-names still say "linksanitiser" — that's deliberate, so existing installs
-upgrade in place rather than becoming a separate app when the display name
-changed.)
+Launching the app directly shows no settings at all - just a running
+count of links cleaned and a breakdown of which domains you've cleaned
+the most. All the cleaning options live in the "Custom" share target
+instead. (Package/class names still say "linksanitiser" — that's
+deliberate, so existing installs upgrade in place rather than becoming a
+separate app when the display name changed.)
 
 ## Share targets
 
@@ -19,12 +20,13 @@ The app shows up twice in Android's share sheet:
 - **Quick** — `ShareReceiverActivity`. Not configurable at all: applies the
   default tracking-parameter rules, strips surrounding text, and keeps only
   the first link if there's more than one. No UI, ever - that's the point.
-- **Custom** — `CustomShareActivity`. Starts from the same defaults as Quick
-  (strip surrounding text, first link only) but shows a small form letting
-  you override any of that just for this share, with a live preview of the
-  result. If the share has more than one link, it also shows a checkbox per
-  link (first one pre-checked) to pick which survive - no separate picker
-  screen, it's inline. Nothing changed here is saved.
+- **Custom** — `CustomShareActivity`. Starts from your remembered settings
+  (strip surrounding text and first-link-only, the first time) and shows a
+  form letting you override any of it just for this share, with a live
+  preview of the result. If the share has more than one link, it also shows
+  a checkbox per link (first one pre-checked) to pick which survive - no
+  separate picker screen, it's inline. Whatever you leave it at when you tap
+  Share becomes the starting point next time.
 
 ## How it works
 
@@ -35,16 +37,20 @@ The app shows up twice in Android's share sheet:
   `buildResult()` then keeps only the given link indices - as plain text
   cleaned in place, or (with `cleanSurroundingText`) as just those links,
   newline separated. `sanitise()` is a convenience wrapper over both for the
-  simple "clean everything in place" case.
+  simple "clean everything in place" case. `hostOf()` extracts a
+  normalised domain from a URL, used for the most-cleaned-domains stats.
 - `Resharing.kt` holds the logic shared by both activities: reading the
-  incoming share and re-opening the share sheet with the final text
-  (excluding our own share targets so you don't loop back into them).
-- `MainActivity` shows the cleaned-link counter and tracking-parameter
-  settings, backed by `Prefs` (`SharedPreferences`). Which links to keep and
-  whether to clean surrounding text are decided per-share in Custom, not
-  configured here.
+  incoming share, recording which domains got cleaned, and re-opening the
+  share sheet with the final text (excluding our own share targets so you
+  don't loop back into them).
+- `MainActivity` is just the counter and domain stats now, backed by
+  `Prefs` (`SharedPreferences`) - no settings.
+- `CustomShareActivity` owns all the actual settings UI: the
+  tracking-parameter toggles, custom params field, toast toggle, "clean
+  surrounding text", and the inline link picker. Changes made there are
+  saved back to `Prefs` as the new remembered defaults.
 
-## Settings (on the main screen - apply to both share targets)
+## Settings (Custom share target only - Quick ignores all of these except the tracking rules)
 
 - Strip UTM parameters (`utm_source`, `utm_campaign`, etc.) — on by default.
 - Strip ad/click IDs (`fbclid`, `gclid`, `igshid`, etc.) — on by default.
@@ -52,6 +58,12 @@ The app shows up twice in Android's share sheet:
   these occasionally affect the destination page rather than just tracking.
 - Custom comma-separated parameter names to always strip.
 - Toggle for a confirmation toast on each share.
+- Clean surrounding text — on by default, matching Quick.
+- Which links to keep, via the inline checkboxes when there's more than one.
+
+Quick always uses the current tracking-parameter rules (the first four
+above) plus its own fixed "strip surrounding text, first link only" -
+it doesn't read or remember the last two.
 
 ## Building
 
@@ -87,13 +99,20 @@ just leave it available) as an option in Android's share sheet.
 
 ## Status
 
-Builds cleanly and all 29 `LinkSanitiserTest` unit tests pass
+Builds cleanly and all 32 `LinkSanitiserTest` unit tests pass
 (`./gradlew test assembleDebug`), verified with the Android SDK
 (compileSdk/build-tools 35). The manifest, package name, launcher
 activity, and both share targets' `ACTION_SEND` intent filters were
 confirmed present in the built APK via `aapt dump`.
 
-Not yet verified on a real device: the Custom form's live preview and
-inline link picker are new this round and haven't been through an
-actual touchscreen/share-sheet test yet, only unit tests of the
-underlying logic and a static check of the built APK's manifest.
+The previous round's Custom-target crash was a real bug, root-caused by
+reading the layout: `MaterialCardView`'s `app:strokeColor` was pointed at
+`?android:attr/listDivider`, which is a *drawable* attribute, not a
+colour - an inflate-time type mismatch that would throw as soon as the
+layout loaded. Fixed by giving the preview card a plain background
+colour instead of a stroke.
+
+Not yet verified on a real device: this round's changes (main-screen
+domain stats, Custom's now-persisted settings, the crash fix) haven't
+been through an actual touchscreen/share-sheet test, only unit tests of
+the underlying logic and a static check of the built APK.

@@ -26,6 +26,6 @@ class ShareReceiverActivity : Activity() {
         val keepIndices = if (found.isNotEmpty()) setOf(0) else emptySet()
         val result = LinkSanitiser.buildResult(sharedText, config, found, keepIndices)
 
-        reshareCleaned(result.text, result.paramsRemoved, prefs)
+        reshareCleaned(result.text, keepIndices.map { found[it] }, prefs)
     }
 }

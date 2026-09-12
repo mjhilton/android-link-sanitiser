@@ -241,4 +241,21 @@ class LinkSanitiserTest {
         assertEquals("https://a.com/ and https://b.com/", result.text)
         assertEquals(2, result.paramsRemoved)
     }
+
+    @Test
+    fun `hostOf strips the scheme, path, port and a leading www`() {
+        assertEquals("twitter.com", LinkSanitiser.hostOf("https://www.twitter.com/some/path?x=1"))
+        assertEquals("example.com", LinkSanitiser.hostOf("https://example.com:8080/"))
+        assertEquals("example.com", LinkSanitiser.hostOf("https://user@example.com/"))
+    }
+
+    @Test
+    fun `hostOf lowercases the host`() {
+        assertEquals("example.com", LinkSanitiser.hostOf("https://EXAMPLE.com/"))
+    }
+
+    @Test
+    fun `hostOf returns null for text with no scheme`() {
+        assertEquals(null, LinkSanitiser.hostOf("not a url"))
+    }
 }

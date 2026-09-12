@@ -190,12 +190,18 @@ object LinkSanitiser {
      * domain like "notamazon.com" is never mistaken for "amazon.*".
      */
     private fun domainSpecificParams(urlBeforeQuery: String): Set<String> {
-        val afterScheme = urlBeforeQuery.substringAfter("://", urlBeforeQuery)
-        val host = afterScheme.substringBefore('/').substringAfterLast('@').substringBefore(':').lowercase()
-        val labels = host.split('.').toSet()
+        val labels = hostOf(urlBeforeQuery)?.split('.')?.toSet() ?: return emptySet()
         return DOMAIN_SPECIFIC_PARAMS.entries
             .firstOrNull { (label, _) -> label in labels }
             ?.value
             ?: emptySet()
+    }
+
+    /** The lowercased host of [url] with any leading "www." dropped, or null if it can't be parsed. */
+    fun hostOf(url: String): String? {
+        val afterScheme = url.substringAfter("://", url)
+        if (afterScheme == url && !url.contains("://")) return null
+        val host = afterScheme.substringBefore('/').substringAfterLast('@').substringBefore(':').lowercase()
+        return host.removePrefix("www.").takeIf { it.isNotEmpty() }
     }
 }

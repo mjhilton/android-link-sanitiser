@@ -6,7 +6,13 @@
     <string name="counter_label">Links cleaned</string>
     <string name="counter_sublabel">Tracking parameters removed since install</string>
 
-    <string name="settings_heading">Settings</string>
+    <string name="top_domains_heading">Most-cleaned domains</string>
+    <string name="top_domains_subheading">Sites with the most tracking stripped from their links</string>
+    <string name="top_domains_row">%1$s: %2$d %3$s</string>
+    <string name="top_domains_empty">Clean a link to see your most-tracked domains here.</string>
+    <string name="clean_singular">clean</string>
+    <string name="clean_plural">cleans</string>
+
     <string name="setting_strip_utm">Strip UTM parameters</string>
     <string name="setting_strip_utm_desc">utm_source, utm_campaign and similar analytics tags</string>
     <string name="setting_strip_click_ids">Strip ad/click IDs</string>
@@ -20,7 +26,7 @@
     <string name="custom_params_label">Custom parameters to always strip (comma-separated)</string>
     <string name="custom_params_hint">e.g. cid, affiliate_id</string>
 
-    <string name="reset_counter">Reset counter</string>
+    <string name="reset_stats">Reset stats</string>
 
     <string name="toast_cleaned">Removed %1$d tracking %2$s</string>
     <string name="toast_nothing_to_clean">No tracking parameters found</string>

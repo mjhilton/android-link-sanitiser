@@ -17,14 +17,18 @@ fun Activity.extractSharedText(): String? =
     }
 
 /**
- * Reports [paramsRemoved] to the counter/toast, then re-opens the share
- * sheet with [text] so the user can pick the real destination, excluding
- * our own share targets so they don't loop back into themselves. Finishes
- * the calling activity.
+ * Reports the cleaning done to [keptLinks] to the counter/domain stats/toast,
+ * then re-opens the share sheet with [text] so the user can pick the real
+ * destination, excluding our own share targets so they don't loop back into
+ * themselves. Finishes the calling activity.
  */
-fun Activity.reshareCleaned(text: String, paramsRemoved: Int, prefs: Prefs) {
+fun Activity.reshareCleaned(text: String, keptLinks: List<FoundLink>, prefs: Prefs) {
+    val paramsRemoved = keptLinks.sumOf { it.paramsRemoved }
+
     if (paramsRemoved > 0) {
         prefs.incrementCount(paramsRemoved)
+        keptLinks.filter { it.paramsRemoved > 0 }
+            .forEach { link -> LinkSanitiser.hostOf(link.original)?.let(prefs::recordDomainCleaned) }
         if (prefs.showToast) {
             val paramWord = if (paramsRemoved == 1) "parameter" else "parameters"
             Toast.makeText(this, getString(R.string.toast_cleaned, paramsRemoved, paramWord), Toast.LENGTH_SHORT).show()

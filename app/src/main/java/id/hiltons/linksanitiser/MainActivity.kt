@@ -1,14 +1,14 @@
 package id.hiltons.linksanitiser
 
-import android.graphics.Rect
 import android.os.Bundle
-import android.view.MotionEvent
-import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.doAfterTextChanged
 import id.hiltons.linksanitiser.databinding.ActivityMainBinding
 
+/**
+ * The launcher screen. Deliberately not configurable - all cleaning
+ * settings live in the "Custom" share target now - just a running tally
+ * and a look at which domains you've cleaned the most.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -21,53 +21,32 @@ class MainActivity : AppCompatActivity() {
 
         prefs = Prefs(this)
 
-        binding.switchStripUtm.isChecked = prefs.stripUtm
-        binding.switchStripClickIds.isChecked = prefs.stripClickIds
-        binding.switchStripReferral.isChecked = prefs.stripReferral
-        binding.switchShowToast.isChecked = prefs.showToast
-        binding.customParamsInput.setText(prefs.customParamsRaw)
-
-        binding.switchStripUtm.setOnCheckedChangeListener { _, checked -> prefs.stripUtm = checked }
-        binding.switchStripClickIds.setOnCheckedChangeListener { _, checked -> prefs.stripClickIds = checked }
-        binding.switchStripReferral.setOnCheckedChangeListener { _, checked -> prefs.stripReferral = checked }
-        binding.switchShowToast.setOnCheckedChangeListener { _, checked -> prefs.showToast = checked }
-
-        binding.customParamsInput.doAfterTextChanged { text ->
-            prefs.customParamsRaw = text?.toString().orEmpty()
-        }
-
         binding.resetButton.setOnClickListener {
-            prefs.linksCleanedCount = 0
-            updateCounterDisplay()
+            prefs.resetStats()
+            updateDisplay()
         }
 
-        updateCounterDisplay()
+        updateDisplay()
     }
 
     override fun onResume() {
         super.onResume()
-        // The counter may have changed via ShareReceiverActivity while we were backgrounded.
-        updateCounterDisplay()
+        // Stats may have changed via a share target while we were backgrounded.
+        updateDisplay()
     }
 
-    private fun updateCounterDisplay() {
+    private fun updateDisplay() {
         binding.counterValue.text = prefs.linksCleanedCount.toString()
-    }
 
-    /** Tapping anywhere outside the focused text field clears its focus and dismisses the keyboard. */
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_DOWN) {
-            val focused = currentFocus
-            if (focused is EditText) {
-                val bounds = Rect()
-                focused.getGlobalVisibleRect(bounds)
-                if (!bounds.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
-                    focused.clearFocus()
-                    val imm = getSystemService(InputMethodManager::class.java)
-                    imm?.hideSoftInputFromWindow(focused.windowToken, 0)
-                }
+        val topDomains = prefs.topDomains(limit = 5)
+        if (topDomains.isEmpty()) {
+            binding.topDomainsText.text = getString(R.string.top_domains_empty)
+        } else {
+            binding.topDomainsText.text = topDomains.joinToString("\n") { (domain, count) ->
+                val displayDomain = domain.replaceFirstChar { it.uppercase() }
+                val cleanWord = if (count == 1) getString(R.string.clean_singular) else getString(R.string.clean_plural)
+                getString(R.string.top_domains_row, displayDomain, count, cleanWord)
             }
         }
-        return super.dispatchTouchEvent(ev)
     }
 }
