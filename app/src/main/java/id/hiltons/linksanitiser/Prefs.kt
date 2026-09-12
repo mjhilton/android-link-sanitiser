@@ -81,7 +81,11 @@ class Prefs(context: Context) {
     }
 
     private companion object {
-        const val KEY_LINKS_COUNT = "links_cleaned_count"
+        // Deliberately not "links_cleaned_count": that key used to store a running sum of
+        // stripped params under the old (pre-split) counter, so reusing it here would make
+        // an upgrading install's "links cleaned" start out already inflated relative to the
+        // brand new params-stripped counter.
+        const val KEY_LINKS_COUNT = "links_cleaned_count_v2"
         const val KEY_PARAMS_COUNT = "params_stripped_count"
         const val KEY_STRIP_UTM = "strip_utm"
         const val KEY_STRIP_CLICK_IDS = "strip_click_ids"
