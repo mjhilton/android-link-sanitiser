@@ -2,6 +2,9 @@ package id.hiltons.linksanitiser
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import id.hiltons.linksanitiser.databinding.ActivityMainBinding
 
@@ -16,6 +19,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         prefs = Prefs(this)
+
+        // Ensure the scroll view can push its content above the keyboard (and, on
+        // edge-to-edge devices, above the nav bar) rather than letting either cover it.
+        ViewCompat.setOnApplyWindowInsetsListener(binding.scrollRoot) { view, insets ->
+            val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val systemBarsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+            view.updatePadding(bottom = maxOf(imeBottom, systemBarsBottom))
+            insets
+        }
 
         binding.switchStripUtm.isChecked = prefs.stripUtm
         binding.switchStripClickIds.isChecked = prefs.stripClickIds

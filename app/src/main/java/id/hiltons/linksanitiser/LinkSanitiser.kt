@@ -20,24 +20,36 @@ data class SanitiseResult(
 
 object LinkSanitiser {
 
-    // utm_* is matched by prefix below, these are the well-known exact names.
+    // Campaign-tag families like utm_* (Google), mtm_* (Matomo) and itm_*
+    // (various CMSes) all follow the same "prefix_field" shape, so they're
+    // matched by prefix rather than being spelled out individually.
+    private val CAMPAIGN_TAG_PREFIXES = listOf("utm_", "mtm_", "otm_", "itm_", "hmb_")
+
     private val UTM_PARAMS = setOf(
         "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
         "utm_id", "utm_name", "utm_referrer", "utm_source_platform",
         "utm_creative_format", "utm_marketing_tactic",
     )
 
-    // Ad-network / platform click identifiers. Safe to strip: they only
-    // feed attribution systems, never page behaviour.
+    // Ad-network / platform click identifiers and analytics tags. Safe to
+    // strip everywhere: they only feed attribution systems, never page
+    // behaviour. Curated from the global (site-agnostic) rules in the
+    // ClearURLs project (github.com/ClearURLs/Rules) plus a few extras.
     private val CLICK_ID_PARAMS = setOf(
         "gclid", "gclsrc", "dclid", "gbraid", "wbraid",
         "fbclid", "igshid", "igsh",
         "msclkid", "twclid", "ttclid", "yclid", "rdt_cid",
-        "mc_eid", "mc_cid",
+        "mc_eid", "mc_cid", "mc_tc",
         "vero_id", "vero_conv",
         "epik", "si", "srsltid",
-        "_hsenc", "_hsmi", "mkt_tok",
-        "li_fat_id", "s_kwcid", "spm",
+        "_hsenc", "_hsmi", "mkt_tok", "__hsfp", "__hssc", "__hstc", "hsctatracking",
+        "li_fat_id", "s_kwcid", "spm", "trackingid",
+        "_openstat", "fb_action_types", "fb_action_ids", "fb_source", "fb_ref",
+        "action_object_map", "action_type_map", "action_ref_map",
+        "cmpid", "os_ehash", "_ga", "_gl", "__twitter_impression",
+        "xtor", "wtmc", "wt_mc", "wtzmc", "wt_zmc", "wtrid",
+        "ml_subscriber", "ml_subscriber_hash", "oly_anon_id", "oly_enc_id",
+        "rb_clickid", "s_cid", "wickedid", "tracking_source", "ceneo_spo",
     )
 
     // Generic referral / attribution params. These occasionally do affect
@@ -45,6 +57,22 @@ object LinkSanitiser {
     // so they're opt-in.
     private val REFERRAL_PARAMS = setOf(
         "ref", "ref_src", "ref_url", "referrer", "source", "from", "trk", "trkCampaign",
+    )
+
+    // Some tracking parameter names are too generic to strip site-wide (e.g.
+    // The Guardian's "CMP" campaign tag, or "sh" on Forbes) without risking a
+    // false match on some other site that happens to use the same short
+    // name for something meaningful. These are only stripped when the link's
+    // host contains a matching label, keyed here by that label (e.g.
+    // "theguardian" matches theguardian.com, www.theguardian.com, ...).
+    // Sourced from ClearURLs' per-site rules.
+    private val DOMAIN_SPECIFIC_PARAMS: Map<String, Set<String>> = mapOf(
+        "theguardian" to setOf("cmp"),
+        "nytimes" to setOf("smid"),
+        "linkedin" to setOf("refid"),
+        "reddit" to setOf("correlation_id", "share_id", "rdt"),
+        "forbes" to setOf("sh"),
+        "amazon" to setOf("tag", "linkcode", "ascsubtag"),
     )
 
     private val URL_REGEX = Regex("""https?://[^\s<>"]+""")
@@ -101,12 +129,14 @@ object LinkSanitiser {
         if (query.isEmpty()) return url to 0
 
         val customLower = config.customParams.map { it.lowercase() }.toSet()
+        val domainParams = domainSpecificParams(base)
         var removed = 0
         val keptPairs = query.split('&').filter { pair ->
             if (pair.isEmpty()) return@filter false
             val name = pair.substringBefore('=').lowercase()
             val shouldStrip = name in customLower ||
-                (config.stripUtm && (name in UTM_PARAMS || name.startsWith("utm_"))) ||
+                name in domainParams ||
+                (config.stripUtm && (name in UTM_PARAMS || CAMPAIGN_TAG_PREFIXES.any { name.startsWith(it) })) ||
                 (config.stripClickIds && name in CLICK_ID_PARAMS) ||
                 (config.stripReferral && name in REFERRAL_PARAMS)
             if (shouldStrip) removed++
@@ -115,5 +145,20 @@ object LinkSanitiser {
 
         val rebuilt = if (keptPairs.isEmpty()) base else base + "?" + keptPairs.joinToString("&")
         return rebuilt + fragment to removed
+    }
+
+    /**
+     * Looks up [DOMAIN_SPECIFIC_PARAMS] by matching a whole hostname label
+     * (e.g. "amazon" in "smile.amazon.co.uk") rather than a substring, so a
+     * domain like "notamazon.com" is never mistaken for "amazon.*".
+     */
+    private fun domainSpecificParams(urlBeforeQuery: String): Set<String> {
+        val afterScheme = urlBeforeQuery.substringAfter("://", urlBeforeQuery)
+        val host = afterScheme.substringBefore('/').substringAfterLast('@').substringBefore(':').lowercase()
+        val labels = host.split('.').toSet()
+        return DOMAIN_SPECIFIC_PARAMS.entries
+            .firstOrNull { (label, _) -> label in labels }
+            ?.value
+            ?: emptySet()
     }
 }

@@ -123,4 +123,49 @@ class LinkSanitiserTest {
         assertEquals(input, result.text)
         assertEquals(0, result.urlsChanged)
     }
+
+    @Test
+    fun `strips the guardian's cmp campaign tag on its own domain`() {
+        val input = "https://www.theguardian.com/world/2024/article?CMP=share_btn_url"
+        val result = LinkSanitiser.sanitise(input, defaultConfig)
+        assertEquals("https://www.theguardian.com/world/2024/article", result.text)
+        assertEquals(1, result.paramsRemoved)
+    }
+
+    @Test
+    fun `does not strip cmp on unrelated domains`() {
+        val input = "https://example.com/?cmp=1&id=2"
+        val result = LinkSanitiser.sanitise(input, defaultConfig)
+        assertEquals(input, result.text)
+        assertEquals(0, result.paramsRemoved)
+    }
+
+    @Test
+    fun `does not mistake notamazon-com for the amazon domain rule`() {
+        val input = "https://notamazon.com/?tag=abc&id=2"
+        val result = LinkSanitiser.sanitise(input, defaultConfig)
+        assertEquals(input, result.text)
+    }
+
+    @Test
+    fun `strips amazon affiliate tag on any amazon tld and subdomain`() {
+        val input = "https://smile.amazon.co.uk/dp/B000?tag=abc123-21&qid=1"
+        val result = LinkSanitiser.sanitise(input, defaultConfig)
+        assertEquals("https://smile.amazon.co.uk/dp/B000?qid=1", result.text)
+    }
+
+    @Test
+    fun `strips additional global tracking params from the expanded list`() {
+        val input = "https://example.com/?xtor=AL-1&_ga=abc&id=2"
+        val result = LinkSanitiser.sanitise(input, defaultConfig)
+        assertEquals("https://example.com/?id=2", result.text)
+        assertEquals(2, result.paramsRemoved)
+    }
+
+    @Test
+    fun `matches matomo mtm campaign prefix like utm`() {
+        val input = "https://example.com/?mtm_campaign=x&id=2"
+        val result = LinkSanitiser.sanitise(input, defaultConfig)
+        assertEquals("https://example.com/?id=2", result.text)
+    }
 }
