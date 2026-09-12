@@ -22,10 +22,6 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_STRIP_REFERRAL, false)
         set(value) = sp.edit().putBoolean(KEY_STRIP_REFERRAL, value).apply()
 
-    var showToast: Boolean
-        get() = sp.getBoolean(KEY_SHOW_TOAST, true)
-        set(value) = sp.edit().putBoolean(KEY_SHOW_TOAST, value).apply()
-
     /** Raw comma-separated text as typed by the user, preserved verbatim for editing. */
     var customParamsRaw: String
         get() = sp.getString(KEY_CUSTOM_PARAMS, "") ?: ""
@@ -89,7 +85,6 @@ class Prefs(context: Context) {
         const val KEY_STRIP_UTM = "strip_utm"
         const val KEY_STRIP_CLICK_IDS = "strip_click_ids"
         const val KEY_STRIP_REFERRAL = "strip_referral"
-        const val KEY_SHOW_TOAST = "show_toast"
         const val KEY_CUSTOM_PARAMS = "custom_params"
         const val KEY_CLEAN_SURROUNDING_TEXT = "clean_surrounding_text"
         const val KEY_DOMAIN_COUNTS = "domain_counts"

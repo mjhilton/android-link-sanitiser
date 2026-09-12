@@ -8,7 +8,7 @@
 
     <string name="top_domains_heading">Most-cleaned domains</string>
     <string name="top_domains_subheading">Sites with the most tracking stripped from their links</string>
-    <string name="top_domains_row">%1$s: %2$d %3$s</string>
+    <string name="top_domains_row_suffix">: %1$d %2$s</string>
     <string name="top_domains_empty">Clean a link to see your most-tracked domains here.</string>
     <string name="clean_singular">clean</string>
     <string name="clean_plural">cleans</string>
@@ -19,7 +19,6 @@
     <string name="setting_strip_click_ids_desc">fbclid, gclid, igshid and other platform click identifiers</string>
     <string name="setting_strip_referral">Strip referral parameters</string>
     <string name="setting_strip_referral_desc">ref, source and similar (occasionally affects the destination page)</string>
-    <string name="setting_show_toast">Show a confirmation when a link is cleaned</string>
     <string name="setting_clean_surrounding_text">Clean surrounding text</string>
     <string name="setting_clean_surrounding_text_desc">Strip supporting text and share just the link(s), instead of cleaning in place</string>
 

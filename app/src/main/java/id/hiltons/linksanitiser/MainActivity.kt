@@ -1,6 +1,9 @@
 package id.hiltons.linksanitiser
 
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.TypefaceSpan
 import androidx.appcompat.app.AppCompatActivity
 import id.hiltons.linksanitiser.databinding.ActivityMainBinding
 
@@ -42,11 +45,16 @@ class MainActivity : AppCompatActivity() {
         if (topDomains.isEmpty()) {
             binding.topDomainsText.text = getString(R.string.top_domains_empty)
         } else {
-            binding.topDomainsText.text = topDomains.joinToString("\n") { (domain, count) ->
-                val displayDomain = domain.replaceFirstChar { it.uppercase() }
+            val rows = SpannableStringBuilder()
+            topDomains.forEachIndexed { index, (domain, count) ->
+                if (index > 0) rows.append("\n")
+                val domainStart = rows.length
+                rows.append(domain)
+                rows.setSpan(TypefaceSpan("monospace"), domainStart, rows.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                 val cleanWord = if (count == 1) getString(R.string.clean_singular) else getString(R.string.clean_plural)
-                getString(R.string.top_domains_row, displayDomain, count, cleanWord)
+                rows.append(getString(R.string.top_domains_row_suffix, count, cleanWord))
             }
+            binding.topDomainsText.text = rows
         }
     }
 }

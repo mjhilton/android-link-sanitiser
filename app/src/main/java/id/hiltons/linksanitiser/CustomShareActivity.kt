@@ -46,7 +46,6 @@ class CustomShareActivity : AppCompatActivity() {
         binding.switchStripClickIds.isChecked = prefs.stripClickIds
         binding.switchStripReferral.isChecked = prefs.stripReferral
         binding.switchCleanSurroundingText.isChecked = prefs.cleanSurroundingText
-        binding.switchShowToast.isChecked = prefs.showToast
         binding.customParamsInput.setText(prefs.customParamsRaw)
 
         // Finding links doesn't depend on which tracker categories are enabled, so this
@@ -114,7 +113,9 @@ class CustomShareActivity : AppCompatActivity() {
     }
 
     private fun updatePreview() {
-        binding.previewText.text = computeResult().text.ifBlank { getString(R.string.custom_preview_empty) }
+        val text = computeResult().text
+        binding.previewText.text = text.ifBlank { getString(R.string.custom_preview_empty) }
+        binding.shareButton.isEnabled = text.isNotBlank()
     }
 
     /** Remembers this share's settings as the starting point for next time. */
@@ -123,7 +124,6 @@ class CustomShareActivity : AppCompatActivity() {
         prefs.stripClickIds = binding.switchStripClickIds.isChecked
         prefs.stripReferral = binding.switchStripReferral.isChecked
         prefs.cleanSurroundingText = binding.switchCleanSurroundingText.isChecked
-        prefs.showToast = binding.switchShowToast.isChecked
         prefs.customParamsRaw = customParamsRaw()
     }
 

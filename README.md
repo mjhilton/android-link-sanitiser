@@ -57,9 +57,13 @@ The app shows up twice in Android's share sheet:
 - Strip referral parameters (`ref`, `source`, etc.) — off by default, since
   these occasionally affect the destination page rather than just tracking.
 - Custom comma-separated parameter names to always strip.
-- Toggle for a confirmation toast on each share.
 - Clean surrounding text — on by default, matching Quick.
 - Which links to keep, via the inline checkboxes when there's more than one.
+  The Share button is disabled whenever the current settings would leave
+  nothing to share (e.g. surrounding text stripped and every link
+  deselected).
+
+A confirmation toast always shows after sharing - there's no toggle for it.
 
 Quick always uses the current tracking-parameter rules (the first four
 above) plus its own fixed "strip surrounding text, first link only" -
@@ -112,7 +116,8 @@ colour - an inflate-time type mismatch that would throw as soon as the
 layout loaded. Fixed by giving the preview card a plain background
 colour instead of a stroke.
 
-Not yet verified on a real device: this round's changes (main-screen
-domain stats, Custom's now-persisted settings, the crash fix) haven't
-been through an actual touchscreen/share-sheet test, only unit tests of
-the underlying logic and a static check of the built APK.
+Not yet verified on a real device: the Share-button disable logic, the
+removal of the toast toggle, and the domain-list styling (monospace
+domain, no capitalisation, moved reset button) are all new this round
+and untested on a touchscreen - only unit tests of the underlying logic
+and a static check of the built APK.
