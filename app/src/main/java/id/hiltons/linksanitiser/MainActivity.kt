@@ -1,6 +1,10 @@
 package id.hiltons.linksanitiser
 
+import android.graphics.Rect
 import android.os.Bundle
+import android.view.MotionEvent
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -26,6 +30,16 @@ class MainActivity : AppCompatActivity() {
             val imeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val systemBarsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
             view.updatePadding(bottom = maxOf(imeBottom, systemBarsBottom))
+            if (imeBottom > 0) {
+                // The padding above only takes effect after this pass, so the focused
+                // field's on-focus auto-scroll (which ran before the keyboard appeared)
+                // undershoots. Ask again now that there's room to scroll into.
+                view.post {
+                    view.findFocus()?.let { focused ->
+                        focused.requestRectangleOnScreen(Rect(0, 0, focused.width, focused.height), true)
+                    }
+                }
+            }
             insets
         }
 
@@ -60,5 +74,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateCounterDisplay() {
         binding.counterValue.text = prefs.linksCleanedCount.toString()
+    }
+
+    /** Tapping anywhere outside the focused text field clears its focus and dismisses the keyboard. */
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_DOWN) {
+            val focused = currentFocus
+            if (focused is EditText) {
+                val bounds = Rect()
+                focused.getGlobalVisibleRect(bounds)
+                if (!bounds.contains(ev.rawX.toInt(), ev.rawY.toInt())) {
+                    focused.clearFocus()
+                    val imm = getSystemService(InputMethodManager::class.java)
+                    imm?.hideSoftInputFromWindow(focused.windowToken, 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 }
