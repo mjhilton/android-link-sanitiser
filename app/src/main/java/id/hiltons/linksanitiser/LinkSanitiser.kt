@@ -1,5 +1,10 @@
 package id.hiltons.linksanitiser
 
+/** Which links survive when a share contains more than one. */
+enum class LinksToKeep {
+    ALL, FIRST, CHOOSE
+}
+
 /**
  * Which categories of tracking parameters to remove, plus any user-supplied
  * extras. Kept as plain data so [LinkSanitiser] has no Android dependency
@@ -10,11 +15,21 @@ data class SanitiserConfig(
     val stripClickIds: Boolean = true,
     val stripReferral: Boolean = false,
     val customParams: Set<String> = emptySet(),
+    val cleanSurroundingText: Boolean = false,
+    val linksToKeep: LinksToKeep = LinksToKeep.ALL,
 )
 
 data class SanitiseResult(
     val text: String,
     val urlsChanged: Int,
+    val paramsRemoved: Int,
+)
+
+/** One URL found in a shared text, before deciding whether it's kept. */
+data class FoundLink(
+    val range: IntRange,
+    val original: String,
+    val cleaned: String,
     val paramsRemoved: Int,
 )
 
@@ -78,21 +93,54 @@ object LinkSanitiser {
     private val URL_REGEX = Regex("""https?://[^\s<>"]+""")
     private val TRAILING_PUNCTUATION = charArrayOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '\'', '"')
 
-    fun sanitise(input: String, config: SanitiserConfig): SanitiseResult {
-        var urlsChanged = 0
-        var paramsRemoved = 0
+    /** Convenience entry point for the common case: clean every link in place, keep them all. */
+    fun sanitise(input: String, config: SanitiserConfig): SanitiseResult =
+        buildResult(input, config, findLinks(input, config))
 
-        val output = URL_REGEX.replace(input) { match ->
-            val (core, trailer) = splitTrailingPunctuation(match.value)
+    /** Locates every link in [text] and cleans each one, without yet deciding which survive. */
+    fun findLinks(text: String, config: SanitiserConfig): List<FoundLink> =
+        URL_REGEX.findAll(text).map { match ->
+            val (core, _) = splitTrailingPunctuation(match.value)
             val (cleaned, removed) = sanitiseUrl(core, config)
-            if (removed > 0) {
-                urlsChanged++
-                paramsRemoved += removed
-            }
-            cleaned + trailer
+            val start = match.range.first
+            FoundLink(IntRange(start, start + core.length - 1), core, cleaned, removed)
+        }.toList()
+
+    /**
+     * Builds the final shared text from [found] links plus [config]. For
+     * [LinksToKeep.CHOOSE], [keepIndices] (indices into [found]) must be
+     * supplied by the caller after showing the picker UI; it's ignored for
+     * [LinksToKeep.ALL] and [LinksToKeep.FIRST], which resolve on their own.
+     */
+    fun buildResult(text: String, config: SanitiserConfig, found: List<FoundLink>, keepIndices: Set<Int>? = null): SanitiseResult {
+        if (found.isEmpty()) return SanitiseResult(text, 0, 0)
+
+        val kept = when (config.linksToKeep) {
+            LinksToKeep.ALL -> found.indices.toSet()
+            LinksToKeep.FIRST -> setOf(0)
+            LinksToKeep.CHOOSE -> keepIndices ?: found.indices.toSet()
         }
 
-        return SanitiseResult(output, urlsChanged, paramsRemoved)
+        val paramsRemoved = kept.sumOf { found[it].paramsRemoved }
+        val urlsChanged = kept.count { found[it].cleaned != found[it].original }
+
+        // Choose mode always produces a link-only, newline-joined result (per spec) since
+        // the whole point of picking is to curate a clean list, not interleave with prose.
+        val text2 = if (config.cleanSurroundingText || config.linksToKeep == LinksToKeep.CHOOSE) {
+            kept.sorted().joinToString("\n") { found[it].cleaned }
+        } else {
+            buildString {
+                var cursor = 0
+                for ((i, link) in found.withIndex()) {
+                    append(text, cursor, link.range.first)
+                    if (i in kept) append(link.cleaned)
+                    cursor = link.range.last + 1
+                }
+                append(text, cursor, text.length)
+            }
+        }
+
+        return SanitiseResult(text2, urlsChanged, paramsRemoved)
     }
 
     /**

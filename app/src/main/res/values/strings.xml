@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">Link Sanitiser</string>
-    <string name="share_target_label">Sanitise link</string>
+    <string name="app_name">Link Cleaner</string>
+    <string name="share_target_quick">Quick</string>
+    <string name="share_target_advanced">Advanced</string>
 
     <string name="counter_label">Links cleaned</string>
     <string name="counter_sublabel">Tracking parameters removed since install</string>
@@ -13,6 +14,12 @@
     <string name="setting_strip_referral">Strip referral parameters</string>
     <string name="setting_strip_referral_desc">ref, source and similar (occasionally affects the destination page)</string>
     <string name="setting_show_toast">Show a confirmation when a link is cleaned</string>
+    <string name="setting_clean_surrounding_text">Clean surrounding text</string>
+    <string name="setting_clean_surrounding_text_desc">Strip supporting text and share just the link(s), instead of cleaning in place</string>
+    <string name="setting_links_to_keep">Links to keep</string>
+    <string name="links_to_keep_all">All — clean every link in place</string>
+    <string name="links_to_keep_first">First — keep only the first link, discard the rest</string>
+    <string name="links_to_keep_choose">Choose — pick which links to keep each time</string>
 
     <string name="custom_params_label">Custom parameters to always strip (comma-separated)</string>
     <string name="custom_params_hint">e.g. cid, affiliate_id</string>
@@ -21,4 +28,11 @@
 
     <string name="toast_cleaned">Removed %1$d tracking %2$s</string>
     <string name="toast_nothing_to_clean">No tracking parameters found</string>
+
+    <string name="picker_title">Choose links to keep</string>
+    <string name="picker_subtitle">Everything else will be discarded. Kept links are shared one per line.</string>
+    <string name="picker_share">Share</string>
+
+    <string name="advanced_title">Customise for this share</string>
+    <string name="advanced_share">Share</string>
 </resources>
