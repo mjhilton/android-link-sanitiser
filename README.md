@@ -33,8 +33,10 @@ links cleaned and a handful of settings.
 
 ## Building
 
-This project has no Android SDK bundled, and needs `compileSdk`/`targetSdk`
-35 with build-tools 35.0.0 (see `app/build.gradle.kts`).
+This project has no Android SDK bundled, and needs `compileSdk` 35 with
+build-tools 35.0.0 (see `app/build.gradle.kts`). `targetSdk` is
+deliberately 34, not 35 — see the comment next to it in
+`app/build.gradle.kts` for why.
 
 **Dev container (recommended if you don't have the SDK installed locally):**
 Open the repo in VS Code with the Dev Containers extension (or GitHub

@@ -10,7 +10,14 @@ android {
     defaultConfig {
         applicationId = "id.hiltons.linksanitiser"
         minSdk = 24
-        targetSdk = 35
+        // Deliberately not 35: targeting SDK 35 makes Android 15's edge-to-edge
+        // enforcement mandatory, which breaks windowSoftInputMode="adjustResize"'s
+        // usual automatic keyboard handling (the OS stops resizing/padding the
+        // window for you, and you have to reimplement it by hand via
+        // WindowInsetsCompat - which turned out fiddly and unreliable in practice).
+        // This app is sideloaded only, never published to Play, so there's no
+        // targetSdk floor to satisfy - simplest fix is to not opt into that.
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
