@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Link Sanitiser</string>
+    <string name="share_target_label">Sanitise link</string>
+
+    <string name="counter_label">Links cleaned</string>
+    <string name="counter_sublabel">Tracking parameters removed since install</string>
+
+    <string name="settings_heading">Settings</string>
+    <string name="setting_strip_utm">Strip UTM parameters</string>
+    <string name="setting_strip_utm_desc">utm_source, utm_campaign and similar analytics tags</string>
+    <string name="setting_strip_click_ids">Strip ad/click IDs</string>
+    <string name="setting_strip_click_ids_desc">fbclid, gclid, igshid and other platform click identifiers</string>
+    <string name="setting_strip_referral">Strip referral parameters</string>
+    <string name="setting_strip_referral_desc">ref, source and similar (occasionally affects the destination page)</string>
+    <string name="setting_show_toast">Show a confirmation when a link is cleaned</string>
+
+    <string name="custom_params_label">Custom parameters to always strip (comma-separated)</string>
+    <string name="custom_params_hint">e.g. cid, affiliate_id</string>
+
+    <string name="reset_counter">Reset counter</string>
+
+    <string name="toast_cleaned">Removed %1$d tracking %2$s</string>
+    <string name="toast_nothing_to_clean">No tracking parameters found</string>
+</resources>

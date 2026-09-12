@@ -1,0 +1,20 @@
+{
+  "name": "Android Link Sanitiser",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteEnv": {
+    "ANDROID_HOME": "/opt/android-sdk",
+    "ANDROID_SDK_ROOT": "/opt/android-sdk"
+  },
+  "postCreateCommand": "chmod +x gradlew",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-gradle",
+        "redhat.java",
+        "fwcd.kotlin"
+      ]
+    }
+  }
+}
