@@ -1,8 +1,9 @@
 package id.hiltons.linksanitiser
 
-import android.app.Activity
 import android.os.Bundle
 import android.widget.CheckBox
+import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
 import id.hiltons.linksanitiser.databinding.ActivityLinkPickerBinding
 
 /**
@@ -11,7 +12,7 @@ import id.hiltons.linksanitiser.databinding.ActivityLinkPickerBinding
  * (surrounding text) is discarded, and the kept links are shared newline
  * separated - launched internally only, never as a share target itself.
  */
-class LinkPickerActivity : Activity() {
+class LinkPickerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLinkPickerBinding
 
@@ -28,10 +29,15 @@ class LinkPickerActivity : Activity() {
             return
         }
 
+        val checkboxSpacingPx = (16 * resources.displayMetrics.density).toInt()
         val checkboxes = candidates.map { link ->
             CheckBox(this).apply {
                 text = link
                 isChecked = false
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                ).apply { bottomMargin = checkboxSpacingPx }
             }
         }
         checkboxes.forEach { binding.linkCheckboxContainer.addView(it) }

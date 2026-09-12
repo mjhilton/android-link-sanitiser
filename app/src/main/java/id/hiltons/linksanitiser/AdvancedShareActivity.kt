@@ -1,7 +1,7 @@
 package id.hiltons.linksanitiser
 
-import android.app.Activity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import id.hiltons.linksanitiser.databinding.ActivityAdvancedShareBinding
 
 /**
@@ -10,7 +10,7 @@ import id.hiltons.linksanitiser.databinding.ActivityAdvancedShareBinding
  * letting the user override settings for this share only; nothing here is
  * saved back to the defaults.
  */
-class AdvancedShareActivity : Activity() {
+class AdvancedShareActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAdvancedShareBinding
 

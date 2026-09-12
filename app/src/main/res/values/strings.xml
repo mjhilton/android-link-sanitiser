@@ -34,5 +34,6 @@
     <string name="picker_share">Share</string>
 
     <string name="advanced_title">Customise for this share</string>
+    <string name="advanced_tracking_heading">Also strip</string>
     <string name="advanced_share">Share</string>
 </resources>
